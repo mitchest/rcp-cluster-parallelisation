@@ -2,7 +2,8 @@
 
 # README #
 
-This repo provides code related to the following two papers:
+This repo provides code related to the following two papers:  
+
   Foster, Hill and Lyons (201x) "Ecological Grouping of Survey Sites when Sampling Artefacts are Present". Journal Name: XX(X), XXX–XXX.  
   DOI: 10.xxxxx/xxx
 
