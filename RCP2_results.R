@@ -325,7 +325,7 @@ setwd("A:/1_UNSW/floristic/RCP2/results/")
 combine.registab = function(n, times, id) {
   registab.data = lapply(as.list(1:n), FUN=function(x) {get(load(paste0("stability/stability.",id,".",x,".RData")))})
   disty.data = lapply(registab.data, FUN=function(x) {x$disty})
-  disty = Reduce("+", disty.data)
+  disty = Reduce("+", disty.data) / n
   predlogls = array(NA,c(length(registab.data[[1]]$oosSizeRange),
                          registab.data[[1]]$model$n,
                          registab.data[[1]]$time * length(registab.data)))
@@ -335,6 +335,7 @@ combine.registab = function(n, times, id) {
   registab.out$predlogls = predlogls
   return(registab.out)
 }
+
 
 stability.nosp = combine.registab(7, 100, "nosp")
 CairoPDF(file="stability/stability.nosp.pdf", width=12, height=7)
