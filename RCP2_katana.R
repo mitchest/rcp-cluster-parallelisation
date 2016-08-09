@@ -1,5 +1,8 @@
-library(Matrix, lib.loc="../R/x86_64-unknown-linux-gnu-library/3.1/")
+#library(Matrix, lib.loc="../R/x86_64-unknown-linux-gnu-library/3.1/")
 #library(Matrix, lib.loc="../R/x86_64-pc-linux-gnu-library/3.2/")
+library(methods)
+library(Matrix)
+library(glmnet)
 library(RCPmod)
 
 # data prep ---------------------------------------------------------------
@@ -54,7 +57,7 @@ if (arr.job) {
 #   # make the first nRCP to test = 2 (can't solve nRCP=1)
 #   nRCP = job+1
   # temp hack code to run multiple starts
-  starts = rep(c(3,13:20),65)
+  starts = rep(c(2:20),50)
   nRCP = starts[job]
 }
 
@@ -115,34 +118,34 @@ gc()
 
 
 # fit mixture models ------------------------------------------------------
-my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10)
+my.cont = list(maxit=3000, penalty=0.0001, penalty.tau=10, penalty.gamma=10)
 
 if (species.model %in% c("both", "species")) {
   tic = proc.time()
   fit.regi = regimix(form.RCP=RCP.form, form.spp=species.form, data=model.data, nRCP=nRCP, 
-                     dist="Bernoulli", control=my.cont, inits="largeData", titbits=TRUE)
+                     dist="Bernoulli", control=my.cont, inits="noPreClust", titbits=TRUE)
   toc = proc.time()
   
   # write model fit stats
   modelStats=list(sites=site.names, covariates=model.covariates.vector, species=model.species.vector, 
                   SppMin=species.n, SppN=fit.regi$S, nRCP=fit.regi$nRCP, runtime=round((toc-tic)[3]/60),
                   AIC=fit.regi$AIC, BIC=fit.regi$BIC, postProbs=fit.regi$postProbs, logl=fit.regi$logl, 
-                  coefs=fit.regi$coefs, species.form=species.form, penalties=unlist(my.cont))
-  save(modelStats, file=paste0("results/k0.0001/spec/RegimixStats.n",fit.regi$n,
+                  coefs=fit.regi$coefs, species.form=species.form, penalties=unlist(my.cont), conv=fit.regi$conv)
+  save(modelStats, file=paste0("results/spec/RegimixStats.n",fit.regi$n,
                                ".rcp",fit.regi$nRCP,".s",fit.regi$S,round(fit.regi$logl),".RData"))
 }
 
 if (species.model %in% c("both", "nospecies")) {
   tic = proc.time()
   fit.regi = regimix(form.RCP=RCP.form, form.spp=NULL, data=model.data, nRCP=nRCP, 
-                     dist="Bernoulli", control=my.cont, inits="largeData", titbits=TRUE)
+                     dist="Bernoulli", control=my.cont, inits="noPreClust", titbits=TRUE)
   toc = proc.time()
   
   # write model fit stats
   modelStats=list(sites=site.names, covariates=model.covariates.vector, species=model.species.vector, 
                   SppMin=species.n, SppN=fit.regi$S, nRCP=fit.regi$nRCP, runtime=round((toc-tic)[3]/60),
                   AIC=fit.regi$AIC, BIC=fit.regi$BIC, postProbs=fit.regi$postProbs, logl=fit.regi$logl, 
-                  coefs=fit.regi$coefs, species.form=species.form, penalties=unlist(my.cont))
-  save(modelStats, file=paste0("results/k0.0001/nospec/RegimixStats.n",fit.regi$n,
+                  coefs=fit.regi$coefs, species.form=species.form, penalties=unlist(my.cont), conv=fit.regi$conv)
+  save(modelStats, file=paste0("results/nospec/RegimixStats.n",fit.regi$n,
                                ".rcp",fit.regi$nRCP,".s",fit.regi$S,round(fit.regi$logl),".RData"))
 }
