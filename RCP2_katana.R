@@ -1,9 +1,7 @@
-#library(Matrix, lib.loc="../R/x86_64-unknown-linux-gnu-library/3.1/")
-#library(Matrix, lib.loc="../R/x86_64-pc-linux-gnu-library/3.2/")
-library(methods)
-library(Matrix)
-library(glmnet)
-library(RCPmod)
+library(methods) # workaround so functions can be found when running via RScript
+library(Matrix) # sameo
+library(glmnet) # sameo
+library(RCPmod) # normally, this is the only package you'll need to load, rest will load via namespace
 
 # data prep ---------------------------------------------------------------
 ## load data that is prepped from "RCP2_dataPrep.R"
