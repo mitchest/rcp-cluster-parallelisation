@@ -8,9 +8,9 @@ library(RCPmod)
 # load data and plot ------------------------------------------------------
 
 #controls = "p0.05_t100_random"
-regimix.results = function(path, pattern, controls="", remove.misfit=F, plot.only=T) {
+regimix.results = function(path, pattern, controls="", remove.misfit=T, plot.only=F) {
   controls = controls
-  
+
   files = list.files(path=paste0(path,controls),full.names=T,pattern=pattern)
   nRCP = as.numeric(rep(NA,length(files)))
   BIC = as.numeric(rep(NA,length(files)))
@@ -19,7 +19,8 @@ regimix.results = function(path, pattern, controls="", remove.misfit=F, plot.onl
   minPostProb = as.numeric(rep(NA,length(files)))
   maxPostProb = as.numeric(rep(NA,length(files)))
   logl = as.numeric(rep(NA,length(files)))
-  
+  conv = as.numeric(rep(NA,length(files)))
+
   for (i in 1:length(files)) {
     load(files[i])
     nRCP[i] = modelStats$nRCP
@@ -29,14 +30,16 @@ regimix.results = function(path, pattern, controls="", remove.misfit=F, plot.onl
     logl[i] = modelStats$logl
     minPostProb[i] = min(colSums(modelStats$postProbs))
     maxPostProb[i] = max(colSums(modelStats$postProbs))
+    conv[i] = modelStats$conv
     rm(modelStats)
   }
-  
-  nRCP.plot = data.frame(nRCP, BIC, AIC, runtime, logl, minPP=round(minPostProb, 3), maxPP=round(maxPostProb, 3))
+
+  nRCP.plot = data.frame(nRCP, BIC, AIC, runtime, logl, minPP=round(minPostProb, 3), maxPP=round(maxPostProb, 3), conv)
   nRCP.plot = nRCP.plot[!is.na(nRCP),]
-  
+
   if (remove.misfit) {
     nRCP.plot = nRCP.plot[nRCP.plot$minPP>0,]
+    nRCP.plot = nRCP.plot[nRCP.plot$conv==0,]
   }
   if (plot.only) {
     return(nRCP.plot[,c("nRCP","BIC","logl")])
@@ -57,35 +60,40 @@ plot.regimix.results = function(regimix.results, model.type) {
 
 
 # paper results
-results.NoSpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/V2_NoSpecies/",
-                                               "*.n4715.*.s488*", remove.misfit=F)
-results.SpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/V2_species/",
-                                             "*.n4715.*.s488*", remove.misfit=F)
+results.NoSpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/V3_NoSpecies/",
+                                               "*.n4715.*.s488*", remove.misfit=T)
+results.SpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/V3_species/",
+                                             "*.n4715.*.s488*", remove.misfit=T)
 
 for (i in 1:20) {print(paste0(i,": ",sum(results.SpeciesModel_.0001$nRCP==i)))}
 for (i in 1:20) {print(paste0(i,": ",sum(results.NoSpeciesModel_.0001$nRCP==i)))}
 
-save(results.SpeciesModel_.0001, results.NoSpeciesModel_.0001, file="modelresults.RData")
+save(results.SpeciesModel_.0001, results.NoSpeciesModel_.0001, file="plotcodedata/modelresults.RData")
+
+load("plotcodedata/modelresults.RData")
+results.NoSpeciesModel_.0001 <- results.NoSpeciesModel_.0001[c("nRCP","BIC")]
+results.SpeciesModel_.0001 <- results.SpeciesModel_.0001[c("nRCP","BIC")]
+save(results.SpeciesModel_.0001, results.NoSpeciesModel_.0001, file="plotcodedata/BICresults.RData")
 
 # paper figure
-BICmin.sp = numeric(29)
-BICmin.nosp = numeric(29)
-for (i in 2:30) {
+BICmin.sp = numeric(19)
+BICmin.nosp = numeric(19)
+for (i in 2:20) {
   BICmin.sp[i-1] = min(results.SpeciesModel_.0001$BIC[results.SpeciesModel_.0001$nRCP==i])
   BICmin.nosp[i-1] = min(results.NoSpeciesModel_.0001$BIC[results.NoSpeciesModel_.0001$nRCP==i])
 }
 #CairoWin()
-CairoPDF(file="NSWVegBIC.pdf", height=9, width=10)
+#CairoPDF(file="NSWVegBIC.pdf", height=9, width=10)
 #par(mfrow=c(1,1))
-plot(1~1, type='n', ylab="BIC", xlab="nRCP", main="BIC vs. nRCP", ylim=c(505000, 650000), xlim=c(1,30))
+plot(1~1, type='n', ylab="BIC", xlab="nRCP", main="BIC vs. nRCP", ylim=c(492000, 555000), xlim=c(1,30))
 points(results.NoSpeciesModel_.0001$BIC ~ c(results.NoSpeciesModel_.0001$nRCP-0.2), pch=16, col="grey", cex=0.5)
 points(results.SpeciesModel_.0001$BIC ~ c(results.SpeciesModel_.0001$nRCP+0.2), pch=16, col="coral", cex=0.5)
-points(BICmin.nosp ~ c(2:30), pch=16, type='b', col="black")
-points(BICmin.sp ~ c(2:30), pch=16, type='b', col="red")
-legend("bottomright", legend=c("No species model (min BIC)", "Species dependence model (min BIC)",
-                               "No species model BIC", "Species dependence model BIC"),
+points(BICmin.nosp ~ c(2:20), pch=16, type='b', col="black")
+points(BICmin.sp ~ c(2:20), pch=16, type='b', col="red")
+legend("bottomright", legend=c("No species model \n(min BIC)\n", "Species dependence \nmodel (min BIC)",
+                               "No species model BIC", "Species dependence \nmodel BIC"),
        pch=c(16,16,16,16), col=c("black","red","grey","coral"))
-dev.off()
+#dev.off()
 
 
 # regimix.results.plot = function(){
@@ -99,7 +107,7 @@ dev.off()
 #                                               "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.NoSpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_NoSpeciesModel/0.0001_10/",
 #                                                "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
-# 
+#
 # results.NoSpeciesModel_.1_1 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_NoSpeciesModel/0.1_1/",
 #                                               "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.NoSpeciesModel_.01_1 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_NoSpeciesModel/0.01_1/",
@@ -108,14 +116,14 @@ dev.off()
 #                                                 "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.NoSpeciesModel_.0001_1 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_NoSpeciesModel/0.0001_1/",
 #                                                  "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
-# 
+#
 # results.SpeciesModel_.01 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_SpeciesModel/method_date_0.01_10/",
 #                                            "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.SpeciesModel_.001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_SpeciesModel/method_date_0.001_10/",
 #                                             "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.SpeciesModel_.0001 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_SpeciesModel/method_date_0.0001_10/",
 #                                              "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
-# 
+#
 # results.SpeciesModel_.1_1 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_SpeciesModel/method_date_0.1_1/",
 #                                             "*.n4813.*.s499*", remove.misfit=F, plot.only=F)
 # results.SpeciesModel_.01_1 = regimix.results("A:/1_UNSW/floristic/RCP2/results/largeData_SpeciesModel/method_date_0.01_1/",
@@ -128,27 +136,27 @@ dev.off()
 # # results plots
 # CairoPDF(file="n4813.s499.largeData.results.pdf", height=10, width=4)
 # par(mfcol=c(5,2))
-# 
+#
 # # no species model
 # # plot.regimix.results(results.NoSpeciesModel_.01, "No Spp. model \nk=0.01,tau=10")
 # # plot.regimix.results(results.NoSpeciesModel_.001, "No Spp. model \nk=0.001,tau=10")
 # plot.regimix.results(results.NoSpeciesModel_.0001, "No Spp. model \nk=0.0001,tau=gamma=10")
-# 
+#
 # # plot.regimix.results(results.NoSpeciesModel_.1_1, "No Spp. model \nk=0.1,tau/gamma=1")
 # # plot.regimix.results(results.NoSpeciesModel_.01_1, "No Spp. model \nk=0.01,tau/gamma=1")
 # # plot.regimix.results(results.NoSpeciesModel_.001_1, "No Spp. model \nk=0.001,tau/gamma=1")
 # # plot.regimix.results(results.NoSpeciesModel_.0001_1, "No Spp. model \nk=0.0001,tau/gamma=1")
-# 
+#
 # # species model
 # # plot.regimix.results(results.SpeciesModel_.01, "~method+date \nk=0.01,tau=10")
 # # plot.regimix.results(results.SpeciesModel_.001, "~method+date \nk=0.001,tau=10")
 # plot.regimix.results(results.SpeciesModel_.0001, "~method+date \nk=0.0001,tau=gamma=10")
-# 
+#
 # # plot.regimix.results(results.SpeciesModel_.1_1, "~method+date \nk=0.1,tau/gamma=1")
 # # plot.regimix.results(results.SpeciesModel_.01_1, "~method+date \nk=0.01,tau/gamma=1")
 # # plot.regimix.results(results.SpeciesModel_.001_1, "~method+date \nk=0.001,tau/gamma=1")
 # # plot.regimix.results(results.SpeciesModel_.0001_1, "~method+date \nk=0.0001,tau/gamma=1")
-# 
+#
 # dev.off()
 
 
@@ -158,7 +166,7 @@ dev.off()
 # plot(modelStats$coefs$tau, ylab="taus", main="~method+date \nk=0.001,tau=1")
 # plot(modelStats$coefs$beta, ylab="betas", main="~method+date \nk=0.001,tau=1")
 # plot(modelStats$coefs$gamma, ylab="gammas", main="~method+date \nk=0.001,tau=1")
-# 
+#
 # plot(modelStats$coefs$tau, ylab="taus", main="~method+date \nk=0.01,tau=10")
 # plot(modelStats$coefs$beta, ylab="betas", main="~method+date \nk=0.01,tau=10")
 # plot(modelStats$coefs$gamma, ylab="gammas", main="~method+date \nk=0.01,tau=10")
@@ -236,7 +244,7 @@ rm(postProbs, vegCom)
 # check out which classes have many matches with RCPs
 sharedSites.df = data.frame(sharedSites)
 # write to file
-write.csv(sharedSites.df, file="results/ConfusionMatrix/spRCP6_sharedsites.csv", row.names=F)
+write.csv(sharedSites.df, file="results/ConfusionMatrix/species_sharedsites.csv", row.names=F)
 
 # no species model
 postProbs = fit.regi.nosp$postProbs
@@ -245,7 +253,7 @@ sharedSites = t(postProbs) %*% vegCom
 sharedSites = round(sharedSites, 1)
 rm(postProbs, vegCom)
 sharedSites.df = data.frame(sharedSites)
-write.csv(sharedSites.df, file="results/ConfusionMatrix/nospRCP8_sharedsites.csv", row.names=F)
+write.csv(sharedSites.df, file="results/ConfusionMatrix/nospecies_sharedsites.csv", row.names=F)
 
 
 
@@ -253,19 +261,19 @@ write.csv(sharedSites.df, file="results/ConfusionMatrix/nospRCP8_sharedsites.csv
 # stability plots ---------------------------------------------------------
 
 # modified functions so plooting can be done later - run on cluster
-# stability.regimix.data <- function (model, oosSizeRange = NULL, times = model$n, mc.cores = 1, 
+# stability.regimix.data <- function (model, oosSizeRange = NULL, times = model$n, mc.cores = 1,
 #                                     quiet = FALSE) {
-#   if (is.null(oosSizeRange)) 
-#     oosSizeRange <- round(seq(from = 1, to = model$n%/%5, 
+#   if (is.null(oosSizeRange))
+#     oosSizeRange <- round(seq(from = 1, to = model$n%/%5,
 #                               length = 10))
-#   if (any(oosSizeRange < 1)) 
-#     stop("Silly number of RCPs. Specified range is: ", oosSizeRange, 
+#   if (any(oosSizeRange < 1))
+#     stop("Silly number of RCPs. Specified range is: ", oosSizeRange,
 #          " and they should all be >= 1")
 #   disty <- matrix(NA, nrow = length(oosSizeRange), ncol = model$nRCP)
-#   predlogls <- array(NA, dim = c(length(oosSizeRange), model$n, 
+#   predlogls <- array(NA, dim = c(length(oosSizeRange), model$n,
 #                                  times))
 #   for (ii in oosSizeRange) {
-#     tmp <- cooks.distance.regimix(model, oosSize = ii, times = times, 
+#     tmp <- cooks.distance.regimix(model, oosSize = ii, times = times,
 #                           mc.cores = mc.cores, quiet = quiet)
 #     disty[oosSizeRange == ii, ] <- colMeans(abs(tmp$cooksD))
 #     predlogls[oosSizeRange == ii, , ] <- tmp$predLogL
@@ -287,16 +295,16 @@ stability.regimix.plot <- function (stability.regimix.data) {
   model = stability.regimix.data$model
   # plotting
   par(mfrow = c(1, 2))
-  matplot(c(0, oosSizeRange), rbind(0, disty), type = "b", 
-          ylab = "Distance from Full Model Predictions", xlab = "Number of Obs Removed", 
-          main = "Stability of Group Predictions", col = 1:model$nRCP, 
+  matplot(c(0, oosSizeRange), rbind(0, disty), type = "b",
+          ylab = "Distance from Full Model Predictions", xlab = "Number of Obs Removed",
+          main = "Stability of Group Predictions", col = 1:model$nRCP,
           pch = as.character(1:model$nRCP), lty = 1)
-  legend("center", bty = "n", lty = 1, pch = as.character(1:model$nRCP), 
-         col = 1:model$nRCP, legend = paste("RCP ", 1:model$nRCP, 
+  legend("center", bty = "n", lty = 1, pch = as.character(1:model$nRCP),
+         col = 1:model$nRCP, legend = paste("RCP ", 1:model$nRCP,
                                             sep = ""))
-  plot(rep(oosSizeRange, each = prod(dim(predlogls[1, , ]))), 
-       predlogls, pch = 20, ylab = "Pred LogL (OOS)", xlab = "Number of Obs Removed", 
-       main = "Stability of Pred Logl", xlim = c(0, max(oosSizeRange)), 
+  plot(rep(oosSizeRange, each = prod(dim(predlogls[1, , ]))),
+       predlogls, pch = 20, ylab = "Pred LogL (OOS)", xlab = "Number of Obs Removed",
+       main = "Stability of Pred Logl", xlim = c(0, max(oosSizeRange)),
        type = "n")
   # all data
   rbPal <- colorRampPalette(c('powderblue','blue'))
@@ -306,14 +314,14 @@ stability.regimix.plot <- function (stability.regimix.data) {
   # leave outs
   rbPal <- colorRampPalette(c('peachpuff','red'))
   for (ii in oosSizeRange) {
-    # points(rep(ii, prod(dim(predlogls[1, , ]))), predlogls[oosSizeRange == 
+    # points(rep(ii, prod(dim(predlogls[1, , ]))), predlogls[oosSizeRange ==
     #                                                          ii, , ], pch = 20)
     histo <- hist(predlogls[oosSizeRange==ii,,], breaks=100, plot=F)
     breaks <- histo$breaks; counts <- histo$counts; cols <- rbPal(max(counts))[counts]
     points(rep(ii,length(breaks)), breaks, pch=20, col=cols)
   }
   legend("bottom",title="Density",legend=c("zero","low","med","high"), pch=21, col="black", pt.bg=rbPal(4), horiz=T)
-  lines(c(0, oosSizeRange), c(mean(model$logl.sites), apply(predlogls, 
+  lines(c(0, oosSizeRange), c(mean(model$logl.sites), apply(predlogls,
                                                             1, mean, na.rm = TRUE)), lwd = 2, col = "red")
 }
 

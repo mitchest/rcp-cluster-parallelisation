@@ -8,7 +8,7 @@
 #PBS -m ae
 #PBS -j oe
 
-#PBS -t 1-950
+#PBS -t 1-900
 
 module add R/3.2.2
 

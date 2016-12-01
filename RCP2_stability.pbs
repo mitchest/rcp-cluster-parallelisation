@@ -10,6 +10,6 @@
 
 module add R/3.2.2
 
-cd $HOME/RCP2/stability
+cd $HOME/RCP2/stability2
 
 Rscript RCP2_stability.R --vanilla

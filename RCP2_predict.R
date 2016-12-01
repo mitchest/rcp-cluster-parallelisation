@@ -3,6 +3,7 @@ library(RCPmod)
 library(Cairo)
 library(foreign)
 library(data.table)
+library(dplyr)
 
 
 
@@ -26,32 +27,41 @@ setwd("A:/1_UNSW/floristic/RCP2")
 ## --> run anlaysis script to load species/covar data
 
 # load model WITH species params 
-load("results/V2_species/RegimixStats.n4715.rcp6.s488-228351.RData")
-my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=FALSE) # no need to optimise, already have param values
-nRCP = 6
-params = unlist(modelStats$coefs)
-fit.regi.sp = regimix(form.RCP=RCP.form, form.spp=species.form, data=model.data, nRCP=nRCP,
-                      dist="Bernoulli", control=my.cont, inits=params, titbits=TRUE)
-save(fit.regi.sp, file="predict/fit.regi.sp.RData")
-
-# load model WITHOUT species params, at same number of RCPs as best model WITH species params...
-load("results/V2_NoSpecies/RegimixStats.n4715.rcp6.s488-239712.RData")
-my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=FALSE) # no need to optimise, already have param values
-nRCP = 6
-params = unlist(modelStats$coefs)
-fit.regi.nospsp = regimix(form.RCP=RCP.form, form.spp=NULL, data=model.data, nRCP=nRCP,
-                      dist="Bernoulli", control=my.cont, inits=params, titbits=TRUE)
-save(fit.regi.nospsp, file="predict/fit.regi.nosp-at-sp.RData")
-
-# load model WITHOUT species params
-load("results/V2_NoSpecies/RegimixStats.n4715.rcp8.s488-234104.RData")
-my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=FALSE) # no need to optimise, already have param values
-nRCP = 8
-params = unlist(modelStats$coefs)
-fit.regi.nosp = regimix(form.RCP=RCP.form, form.spp=NULL, data=model.data, nRCP=nRCP,
+load("results/V3_species/RegimixStats.n4715.rcp9.s488-219503.RData")
+if (modelStats$conv == 0) {
+  my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=TRUE) # no need to optimise, already have param values
+  nRCP = 9
+  params = unlist(modelStats$coefs)
+  fit.regi.sp = regimix(form.RCP=RCP.form, form.spp=species.form, data=model.data, nRCP=nRCP,
                         dist="Bernoulli", control=my.cont, inits=params, titbits=TRUE)
-save(fit.regi.nosp, file="predict/fit.regi.nosp.RData")
-
+  save(fit.regi.sp, file="predict/fit.regi.sp.RData")
+} else {
+  message("model not converged, try again")
+}
+# load model WITHOUT species params, at same number of RCPs as best model WITH species params...
+load("results/V3_NoSpecies/RegimixStats.n4715.rcp9.s488-228541.RData")
+if (modelStats$conv == 0) {
+  my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=FALSE) # no need to optimise, already have param values
+  nRCP = 9
+  params = unlist(modelStats$coefs)
+  fit.regi.nospsp = regimix(form.RCP=RCP.form, form.spp=NULL, data=model.data, nRCP=nRCP,
+                        dist="Bernoulli", control=my.cont, inits=params, titbits=TRUE)
+  save(fit.regi.nospsp, file="predict/fit.regi.nosp-at-sp.RData")
+} else {
+  message("model not converged, try again")
+}
+# load model WITHOUT species params
+load("results/V3_NoSpecies/RegimixStats.n4715.rcp11.s488-223511.RData")
+if (modelStats$conv == 0) {
+  my.cont = list(penalty=0.0001, penalty.tau=10, penalty.gamma=10, optimise=TRUE) # no need to optimise, already have param values
+  nRCP = 11
+  params = unlist(modelStats$coefs)
+  fit.regi.nosp = regimix(form.RCP=RCP.form, form.spp=NULL, data=model.data, nRCP=nRCP,
+                          dist="Bernoulli", control=my.cont, inits=params, titbits=TRUE)
+  save(fit.regi.nosp, file="predict/fit.regi.nosp.RData")
+} else {
+  message("model not converged, try again")
+}
 
 
 # make  prediction to env/geo space ---------------------------------------
@@ -162,11 +172,11 @@ predicted.nosp = predict.regimix(object=fit.regi.nosp, newdata=covars, nboot=0)
 predicted.nosp.estimate = data.frame(locs, predicted.nosp)
 save(predicted.nosp.estimate, file="predict/predicted.nosp.estimate.RData")
 
-# dummy ci's until boots done
-predicted.sp.low = data.frame(locs, matrix(nrow=nrow(predicted.sp), ncol=ncol(predicted.nosp)))
-predicted.sp.up = data.frame(locs, matrix(nrow=nrow(predicted.sp), ncol=ncol(predicted.nosp)))
-predicted.nosp.low = data.frame(locs, matrix(nrow=nrow(predicted.nosp), ncol=ncol(predicted.nosp)))
-predicted.nosp.up = data.frame(locs, matrix(nrow=nrow(predicted.nosp), ncol=ncol(predicted.nosp)))
+# # dummy ci's until boots done
+# predicted.sp.low = data.frame(locs, matrix(nrow=nrow(predicted.sp), ncol=ncol(predicted.nosp)))
+# predicted.sp.up = data.frame(locs, matrix(nrow=nrow(predicted.sp), ncol=ncol(predicted.nosp)))
+# predicted.nosp.low = data.frame(locs, matrix(nrow=nrow(predicted.nosp), ncol=ncol(predicted.nosp)))
+# predicted.nosp.up = data.frame(locs, matrix(nrow=nrow(predicted.nosp), ncol=ncol(predicted.nosp)))
 
 ###################
 ## bootstrapping ##
@@ -176,9 +186,9 @@ predicted.nosp.up = data.frame(locs, matrix(nrow=nrow(predicted.nosp), ncol=ncol
 #fit.regiboot.sp = regiboot(fit.regi.sp, nboot=100)
 #fit.regiboot.nosp = regiboot(fit.regi.nosp, nboot=100)
 
-# first look at variance on model data
-fit.regivar.sp = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp)
-fit.regivar.nosp = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp)
+# # first look at variance on model data
+# fit.regivar.sp = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp)
+# fit.regivar.nosp = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp)
 
 # predict for newdata with variances (split up newdata for memory issues)
 predicted.sp.list = list()
@@ -187,24 +197,24 @@ predicted.nospsp.list = list()
 idx = round(nrow(covars)/2)
 for (i in 1:2) {
   if (i==1) {
-#     predicted.sp.list[[i]] = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp, 
-#                                              newdata=covars[1:idx,])
-#     gc()
-#     predicted.nosp.list[[i]] = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp, 
-#                                                newdata=covars[1:idx,])
-#     gc()
-    predicted.nospsp.list[[i]] = predict.regimix(object=fit.regi.nospsp, object2=fit.regiboot.nospsp, 
+    predicted.sp.list[[i]] = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp,
+                                             newdata=covars[1:idx,])
+    gc()
+    predicted.nosp.list[[i]] = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp,
+                                               newdata=covars[1:idx,])
+    gc()
+    predicted.nospsp.list[[i]] = predict.regimix(object=fit.regi.nospsp, object2=fit.regiboot.nospsp,
                                                newdata=covars[1:idx,])
     gc()
   }
   if (i==2) {
-#     predicted.sp.list[[i]] = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp, 
-#                                              newdata=covars[(idx+1):nrow(covars),])
-#     gc()
-#     predicted.nosp.list[[i]] = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp, 
-#                                                newdata=covars[(idx+1):nrow(covars),])
-#     gc()
-    predicted.nospsp.list[[i]] = predict.regimix(object=fit.regi.nospsp, object2=fit.regiboot.nospsp, 
+    predicted.sp.list[[i]] = predict.regimix(object=fit.regi.sp, object2=fit.regiboot.sp,
+                                             newdata=covars[(idx+1):nrow(covars),])
+    gc()
+    predicted.nosp.list[[i]] = predict.regimix(object=fit.regi.nosp, object2=fit.regiboot.nosp,
+                                               newdata=covars[(idx+1):nrow(covars),])
+    gc()
+    predicted.nospsp.list[[i]] = predict.regimix(object=fit.regi.nospsp, object2=fit.regiboot.nospsp,
                                                newdata=covars[(idx+1):nrow(covars),])
     gc()
   }
@@ -270,6 +280,10 @@ save(predicted.nospsp.btpreds, file="predict/predicted.nosp-at-sp.btpreds.RData"
 save(predicted.nosp.up, predicted.nosp.low, predicted.nosp.estimate, predicted.nosp.btpreds, file="PredsWithoutSpeciesTerms.RData")
 save(predicted.nospsp.up, predicted.nospsp.low, predicted.nospsp.estimate, predicted.nospsp.btpreds, file="PredsWithoutSpeciesTerms-at-sp.RData")
 save(predicted.sp.up, predicted.sp.low, predicted.sp.estimate, predicted.sp.btpreds, file="PredsWithSpeciesTerms.RData")
+# save for xy GIS plotting
+write.csv(predicted.nosp.estimate, "predict/predicted_nosp_estimate.csv", row.names = F)
+write.csv(predicted.nosp.low, "predict/predicted_nosp_low.csv", row.names = F)
+write.csv(predicted.nosp.up, "predict/predicted_nosp_up.csv", row.names = F)
 
 
 
@@ -292,19 +306,19 @@ load("predict/predicted.nosp-at-sp.low.RData")
 
 ## species model
 #CairoWin()
-CairoPDF(file="NSWVeg_SpeciesModel_preds.pdf", height=7, width=6)
-par(mar=c(0.5,4,1,0.5), oma=c(2,4,2,0), mfrow=c(6,3))
+CairoPDF(file="NSWVeg_SpeciesModel_preds.pdf", height=8, width=6)
+par(mar=c(0.5,4,1,0.5), oma=c(2,4,2,0), mfrow=c(10,3))
 #ext = extent(-35,-30,144,150.5)
 #colour = c("#ffffff","#f5f5f5","#fcae91","#fb6a4a","#de2d26","#a50f15", "#a50f15")
 colour = c("#dddddd","#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d","#000000")
 breaks = c(0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 
-for (i in 3:8) {
+for (i in 3:12) {
   if (i==3) {
     plot(rasterFromXYZ(predicted.sp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2), main="Lower CI")
     plot(rasterFromXYZ(predicted.sp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Point Prediction")
     plot(rasterFromXYZ(predicted.sp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Upper CI")
-  } else if (i>3 & i<8) {
+  } else if (i>3 & i<12) {
     plot(rasterFromXYZ(predicted.sp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2))
     plot(rasterFromXYZ(predicted.sp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
     plot(rasterFromXYZ(predicted.sp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
@@ -318,19 +332,19 @@ dev.off()
 
 ## no species model
 #CairoWin()
-CairoPDF(file="NSWVeg_NoSpeciesModel_preds.pdf", height=8, width=5.5)
-par(mar=c(0.5,4,1,0.5), oma=c(2,4,2,0), mfrow=c(8,3))
+CairoPDF(file="NSWVeg_NoSpeciesModel_preds.pdf", height=8, width=6)
+par(mar=c(0.5,4,1,0.5), oma=c(2,4,2,0), mfrow=c(11,3))
 #ext = extent(-35,-30,144,150.5)
 #colour = c("#ffffff","#f5f5f5","#fcae91","#fb6a4a","#de2d26","#a50f15", "#a50f15")
 colour = c("#dddddd","#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d","#000000")
 breaks = c(0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
 
-for (i in 3:10) {
+for (i in 3:13) {
   if (i==3) {
     plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2), main="Lower CI")
     plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Point Prediction")
     plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Upper CI")
-  } else if (i>3 & i<10) {
+  } else if (i>3 & i<13) {
     plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2))
     plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
     plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
@@ -419,15 +433,33 @@ HardClust = function(ptPreds){
   return(RCPclusters)
 }
 
-ptPreds.hard = HardClust(predicted.nosp.estimate)
-ptPreds.hard = data.frame(predicted.nosp.estimate[,c(2,1)],ptPreds.hard)
-
-#SEs = predicted[,c(1,2,21:29)]
+plot_hard <- function(ptPreds, nRCP) {
+  #par(mar=c(1,1,1,1), mfrow=c(1,2))
+  colour = rainbow(n=nRCP)
+  plot(rasterFromXYZ(ptPreds), legend=F, col=colour)
+  legend(x='bottomright', legend = paste0("RCP ", 1:nRCP),
+         fill = colour)
+}
 
 CairoWin()
-#par(mar=c(1,1,1,1), mfrow=c(1,2))
-colour = sample(rainbow(n=8))
-plot(rasterFromXYZ(ptPreds.hard), legend=F, col=colour)
-legend(x='bottomright', legend = c("RCP 1","RCP 2","RCP 3","RCP 4","RCP 5","RCP 6","RCP 7","RCP 8"),
-       fill = colour)
+
+nosp.hard = HardClust(predicted.nosp.estimate)
+nosp.hard = data.frame(predicted.nosp.estimate[,c(2,1)],sp.hard)
+plot_hard(nosp.hard, 11)
+
+sp.hard = HardClust(predicted.sp.estimate)
+sp.hard = data.frame(predicted.sp.estimate[,c(2,1)],sp.hard)
+plot_hard(nosp.hard, 10)
+
+
+
+
+
+
+
+
+
+
+
+
 

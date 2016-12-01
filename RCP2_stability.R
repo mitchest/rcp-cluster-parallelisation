@@ -1,6 +1,53 @@
 # stability plots ---------------------------------------------------------
 
 library(RCPmod)
+library(data.table)
+
+# load, run, dump - stability data function
+load("fit.regi.nosp.RData")
+stability.nosp = stability.regimix(model=fit.regi.nosp, oosSizeRange=c(750), times=10, mc.cores=4, doPlot=F)
+save(stability.nosp, file="stability.nosp.RData")
+rm(fit.regi.nosp,stability.nosp)
+gc()
+
+load("fit.regi.sp.RData")
+stability.sp = stability.regimix(model=fit.regi.sp, oosSizeRange=c(750), times=10, mc.cores=4, doPlot=F)
+save(stability.sp, file="stability.sp.RData")
+rm(fit.regi.sp,stability.sp)
+gc()
+
+
+# stitch separate runs
+stablist_nosp <- lapply(X = c("1-20-50",100,300,750), FUN = function(x) {get(load(paste0("results/stability/stability.nosp.",x,".RData")))})
+stablist_sp <- lapply(X = c("1-20-50",100,300,750), FUN = function(x) {get(load(paste0("results/stability/stability.sp.",x,".RData")))})
+
+registab_sp <- stablist_sp[[1]]
+registab_sp$oosSizeRange <- c(1,20,50,100,300,750)
+registab_sp$disty <- as.matrix(rbindlist(lapply(X = stablist_sp, FUN = function(x){as.data.frame(x$disty)})))
+registab_sp$predlogls <- array(NA, dim = c(6,4715,10))
+registab_sp$predlogls[1:3,,] <- stablist_sp[[1]]$predlogls
+registab_sp$predlogls[4,,] <- stablist_sp[[2]]$predlogls
+registab_sp$predlogls[5,,] <- stablist_sp[[3]]$predlogls
+registab_sp$predlogls[6,,] <- stablist_sp[[4]]$predlogls
+
+registab_nosp <- stablist_nosp[[1]]
+registab_nosp$oosSizeRange <- c(1,20,50,100,300,750)
+registab_nosp$disty <- as.matrix(rbindlist(lapply(X = stablist_nosp, FUN = function(x){as.data.frame(x$disty)})))
+registab_nosp$predlogls <- array(NA, dim = c(6,4715,10))
+registab_nosp$predlogls[1:3,,] <- stablist_nosp[[1]]$predlogls
+registab_nosp$predlogls[4,,] <- stablist_nosp[[2]]$predlogls
+registab_nosp$predlogls[5,,] <- stablist_nosp[[3]]$predlogls
+registab_nosp$predlogls[6,,] <- stablist_nosp[[4]]$predlogls
+
+
+# test
+plot.registab(registab_sp)
+plot.registab(registab_nosp)
+
+save(registab_sp, file="registab_sp.RData")
+save(registab_nosp, file="registab_nosp.RData")
+
+
 
 # modified functions so plooting can be done later
 # cooks.distance.regimix.katana <- function (model, ..., oosSize = 1, times = model$n, mc.cores = 1, 
@@ -103,30 +150,30 @@ library(RCPmod)
 # }
 
 
-stability.regimix.data <- function (model, oosSizeRange = NULL, times = model$n, mc.cores = 1, 
-                                    quiet = FALSE) {
-  if (is.null(oosSizeRange)) 
-    oosSizeRange <- round(seq(from = 1, to = model$n%/%5, 
-                              length = 10))
-  if (any(oosSizeRange < 1)) 
-    stop("Silly number of RCPs. Specified range is: ", oosSizeRange, 
-         " and they should all be >= 1")
-  disty <- matrix(NA, nrow = length(oosSizeRange), ncol = model$nRCP)
-  predlogls <- array(NA, dim = c(length(oosSizeRange), model$n, 
-                                 times))
-  for (ii in oosSizeRange) {
-    tmp <- cooks.distance.regimix(model, oosSize = ii, times = times, 
-                          mc.cores = mc.cores, quiet = quiet)
-    disty[oosSizeRange == ii, ] <- colMeans(abs(tmp$cooksD))
-    predlogls[oosSizeRange == ii, , ] <- tmp$predLogL
-  }
-  # return stuff needed for plotting
-  return(list(oosSizeRange=oosSizeRange,
-              times=times,
-              disty=disty,
-              predlogls=predlogls,
-              model=list(n=model$n,nRCP=model$nRCP,logl.sites=model$logl.sites)))
-}
+# stability.regimix.data <- function (model, oosSizeRange = NULL, times = model$n, mc.cores = 1, 
+#                                     quiet = FALSE) {
+#   if (is.null(oosSizeRange)) 
+#     oosSizeRange <- round(seq(from = 1, to = model$n%/%5, 
+#                               length = 10))
+#   if (any(oosSizeRange < 1)) 
+#     stop("Silly number of RCPs. Specified range is: ", oosSizeRange, 
+#          " and they should all be >= 1")
+#   disty <- matrix(NA, nrow = length(oosSizeRange), ncol = model$nRCP)
+#   predlogls <- array(NA, dim = c(length(oosSizeRange), model$n, 
+#                                  times))
+#   for (ii in oosSizeRange) {
+#     tmp <- cooks.distance.regimix(model, oosSize = ii, times = times, 
+#                           mc.cores = mc.cores, quiet = quiet)
+#     disty[oosSizeRange == ii, ] <- colMeans(abs(tmp$cooksD))
+#     predlogls[oosSizeRange == ii, , ] <- tmp$predLogL
+#   }
+#   # return stuff needed for plotting
+#   return(list(oosSizeRange=oosSizeRange,
+#               times=times,
+#               disty=disty,
+#               predlogls=predlogls,
+#               model=list(n=model$n,nRCP=model$nRCP,logl.sites=model$logl.sites)))
+# }
 
 # stability.regimix.plot <- function (stability.regimix.data) {
 #   # declare all the plotting variables
@@ -156,18 +203,3 @@ stability.regimix.data <- function (model, oosSizeRange = NULL, times = model$n,
 #   lines(c(0, oosSizeRange), c(mean(model$logl.sites), apply(predlogls, 
 #                                                             1, mean, na.rm = TRUE)), lwd = 2, col = "red")
 # }
-
-
-# load, run, dump - stability data function
-load("fit.regi.nosp.RData")
-stability.nosp = stability.regimix.data(model=fit.regi.nosp, oosSizeRange=c(1,10,50,100,200,300,400,500), times=100, mc.cores=4)
-save(stability.nosp, file="stability.nosp.RData")
-rm(fit.regi.nosp,stability.nosp)
-gc()
-
-load("fit.regi.sp.RData")
-stability.sp = stability.regimix.data(model=fit.regi.sp, oosSizeRange=c(1,10,50,100,200,300,400,500), times=100, mc.cores=4)
-save(stability.sp, file="stability.sp.RData")
-rm(fit.regi.sp,stability.sp)
-gc()
-

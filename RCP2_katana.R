@@ -55,7 +55,7 @@ if (arr.job) {
 #   # make the first nRCP to test = 2 (can't solve nRCP=1)
 #   nRCP = job+1
   # temp hack code to run multiple starts
-  starts = rep(c(2:20),50)
+  starts = rep(c(8:13),150)
   nRCP = starts[job]
 }
 
