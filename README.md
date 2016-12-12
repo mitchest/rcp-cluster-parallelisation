@@ -4,12 +4,11 @@
 
 This repo provides code related to the following two papers:  
 
-  + Foster, Hill and Lyons (201x) "Ecological Grouping of Survey Sites when Sampling Artefacts are Present". Journal Name: XX(X), XXX–XXX. DOI: 10.xxxxx/xxx
+  + Foster, Hill and Lyons (accepted) "Ecological Grouping of Survey Sites when Sampling Artefacts are Present". Journal of the Royal Statistical Society: Series C (Applied Statistics). DOI: xx.xxxxx/xxx
 
-  + Lyons, Foster and Keith (201x) "Simultaneous vegetation classification and mapping using a statistical model". Journal Name: XX(X), XXX–XXX. DOI: 10.xxxxx/xxx  
+  + Lyons, Foster and Keith (in review) "Data driven, simultaneous vegetation classification and mapping at large spatial scales". Journal Name. DOI: xx.xxxxx/xxx  
 
-The purpose of this repo is not necessarily to reproduce results form those papers, but to provide guidence for how analysis with the R package {RCPmod} can be parallelised on a (relatively generic) computing cluster. You would want (have) to do this when your analysis reaches 1000's of observations and 100's of species. The data itself can be found at this repo:  
-https://github.com/mitchest/rcp-survey-artifacts  
+The purpose of this repo is not necessarily to reproduce results form those papers, but to provide guidence for how analysis with the R package {RCPmod} can be parallelised on a (relatively generic) computing cluster. You would want (have) to do this when your analysis reaches 1000's of observations and 100's of species. The data is provided here as an .RData file for convenience. For some non-cluster work flows for fitting RCP models, see the repo https://github.com/mitchest/rcp-survey-artifacts 
 
 ### Running code ###
 
