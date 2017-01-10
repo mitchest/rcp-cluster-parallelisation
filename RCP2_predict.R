@@ -332,26 +332,35 @@ dev.off()
 
 ## no species model
 #CairoWin()
-CairoPDF(file="NSWVeg_NoSpeciesModel_preds.pdf", height=8, width=6)
-par(mar=c(0.5,4,1,0.5), oma=c(2,4,2,0), mfrow=c(11,3))
+CairoPDF(file="NSWVeg_NoSpeciesModel_preds.pdf", height=8, width=4.5)
+par(mfrow=c(13,4), mar=c(0.5,1.5,0.5,0), oma=c(0.5,1.5,0.5,0))
 #ext = extent(-35,-30,144,150.5)
 #colour = c("#ffffff","#f5f5f5","#fcae91","#fb6a4a","#de2d26","#a50f15", "#a50f15")
 colour = c("#dddddd","#fff5f0","#fee0d2","#fcbba1","#fc9272","#fb6a4a","#ef3b2c","#cb181d","#a50f15","#67000d","#000000")
 breaks = c(0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+xlim <- c(138,157)
 
 for (i in 3:13) {
   if (i==3) {
-    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2), main="Lower CI")
-    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Point Prediction")
-    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="Upper CI")
+    frame()
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.3, y = 0.2, paste("Lower\n","CI"), cex = 1.1, col = "black")
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.3, y = 0.2, paste("Point\n","Prediction"), cex = 1.1, col = "black")
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.3, y = 0.2, paste("Upper\n","CI"), cex = 1.1, col = "black")
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.5, y = 0.5, paste("RCP\n",i-2), cex = 0.8, col = "black")
+    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2), main="", xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="", xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, main="", xlim=xlim)
   } else if (i>3 & i<13) {
-    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2))
-    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
-    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F)
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.7, y = 0.5, paste("RCP\n",i-2), cex = 0.8, col = "black")
+    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, xaxt="n", ylab=paste0("RCP",i-2), xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, axes=F, xlim=xlim)
   } else {
-    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, ylab=paste0("RCP",i-2))
-    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, yaxt="n")
-    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, yaxt="n")
+    plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n'); text(x = 0.7, y = 0.5, paste("RCP\n",i-2), cex = 0.8, col = "black")
+    plot(rasterFromXYZ(predicted.nosp.low[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, ylab=paste0("RCP",i-2), xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.estimate[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, yaxt="n", xlim=xlim)
+    plot(rasterFromXYZ(predicted.nosp.up[,c(2,1,i)]), breaks=breaks, col=colour, legend=F, yaxt="n", xlim=xlim)
+    for (ii in 1:3) {frame()}
   }
 }
 dev.off()
