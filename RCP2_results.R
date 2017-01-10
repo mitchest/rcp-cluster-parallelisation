@@ -85,7 +85,7 @@ for (i in 2:20) {
 #CairoWin()
 #CairoPDF(file="NSWVegBIC.pdf", height=9, width=10)
 #par(mfrow=c(1,1))
-plot(1~1, type='n', ylab="BIC", xlab="nRCP", main="BIC vs. nRCP", ylim=c(492000, 555000), xlim=c(1,30))
+plot(1~1, type='n', ylab="BIC", xlab="number of RCPs", main="BIC vs. nRCP", ylim=c(492000, 555000), xlim=c(1,21))
 points(results.NoSpeciesModel_.0001$BIC ~ c(results.NoSpeciesModel_.0001$nRCP-0.2), pch=16, col="grey", cex=0.5)
 points(results.SpeciesModel_.0001$BIC ~ c(results.SpeciesModel_.0001$nRCP+0.2), pch=16, col="coral", cex=0.5)
 points(BICmin.nosp ~ c(2:20), pch=16, type='b', col="black")
@@ -211,6 +211,12 @@ for (i in gamma.labs) {
 dev.off()
 
 
+
+# residual plots
+library(RCPmod)
+load("predict/fit.regi.nosp.RData")
+plot.regimix(fit.regi.nosp)
+
 # check posterior probabilities -------------------------------------------
 # colSums(postProbs)
 # plot(colSums(fit.regi$postProbs),
@@ -255,7 +261,15 @@ rm(postProbs, vegCom)
 sharedSites.df = data.frame(sharedSites)
 write.csv(sharedSites.df, file="results/ConfusionMatrix/nospecies_sharedsites.csv", row.names=F)
 
-
+## OR USE THIS FUNCTION INSTEAD!
+create_confusion <- function(postProbs, compare_to_data, compare_to_column) {
+  # build binary matrix for categorical class being compared to
+  compare_to <- model.matrix(~0+compare_to_column, data=compare_to_data)
+  # build matrix of expected shared sites
+  sharedSites = t(postProbs) %*% compare_to
+  sharedSites = round(sharedSites, 1)
+  data.frame(sharedSites)
+}
 
 
 # stability plots ---------------------------------------------------------
