@@ -71,6 +71,21 @@ dev.off()
 
 
 
+# plot actual predicted values --------------------------------------------
+
+CairoPDF(file = "RCP2_11RCP_predvals.pdf", width = 10, height = 14)
+par(mfcol=c(11,7))
+for (i in 1:11) {
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$tempmtcp, ylab = i, xlab = names(covar.data)[1])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$precipseas, ylab = i, xlab = names(covar.data)[2])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$precipann, ylab = i, xlab = names(covar.data)[3])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$tempmtwp, ylab = i, xlab = names(covar.data)[4])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$rough500, ylab = i, xlab = names(covar.data)[5])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$bd200, ylab = i, xlab = names(covar.data)[6])
+  plot(fit.regi.nosp$postProbs[,i] ~ covar.data$ph200, ylab = i, xlab = names(covar.data)[7])
+}
+dev.off()
+
 
 
 
