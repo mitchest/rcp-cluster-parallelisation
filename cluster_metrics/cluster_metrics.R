@@ -1,6 +1,19 @@
-# purity & entropy functions, from:
-# Manning, C. D., Raghavan, P., & Schütze, H. (2008). Introduction to information retrieval (Vol. 1, No. 1, p. 496). Cambridge: Cambridge university press.
+# This first example is using the R package c2c, which is a general tool
+# for creating confusion matrcies and calculating lcuster metrics
 
+library(c2c)
+
+load("state-wide_classes_postprobs.RData")
+
+nsw_formations <- get_conf_mat(postProbs, classes$FORMATIONN)
+
+calculate_clustering_metrics(nsw_formations)
+
+# This second example is a little more specific to the JBio paper, because some of the classes need sorting
+# and is quicker and doesn't need any additional package loads
+
+# purity & entropy functions, from:
+# Manning, C. D., Raghavan, P., & Sch?tze, H. (2008). Introduction to information retrieval (Vol. 1, No. 1, p. 496). Cambridge: Cambridge university press.
 
 cluster_purity <- function(conf_mat) {
   print(round(apply(conf_mat, 2, max) / apply(conf_mat, 2, sum), 2))

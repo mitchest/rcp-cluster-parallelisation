@@ -226,6 +226,10 @@ plot.regimix(fit.regi.nosp)
 
 
 # confusion matrix --------------------------------------------------------
+
+# can do all this instead with package c2c
+# https://cran.r-project.org/web/packages/c2c/
+
 library(foreign)
 load("covariates_species_RCP2.RData")
 load("predict/fit.regi.sp.RData")
